@@ -20,6 +20,7 @@ public:
     _itsClick = false;
     return false;
   }
+  return 0;
   }
 
 private:
