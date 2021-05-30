@@ -10,9 +10,8 @@ struct Bot {                             //Структура для кнопо�
 };
 
 Button but1 (13);                                //Непосредственно сами кнопки
-
-Bot bot2;
-Bot bot3;
+Button but2 (12);
+Button but3 (10);
 
 bool clickBotton(Bot & botN);            //Прототип функции для кнопки
 bool jump = 0;                           //Прыжок Дино бегуна
@@ -63,12 +62,7 @@ void setup() {
 #ifdef DEBAG
   Serial.begin(9600);                     //Открываем пор для отладки программы
 #endif
-  bot2.pin = 12;                          //Назначаем пины кнопок
-  bot3.pin = 10;
   
-  pinMode(bot2.pin, INPUT_PULLUP);        //Устанавливаем пины кнопок на чтение
-  pinMode(bot3.pin, INPUT_PULLUP);
-
   pinMode(9, OUTPUT);                     //Пин для пищалки
 
   randomSeed(analogRead(A0));             //Задаем случайное зерно рандома с "наводок воздуха"
@@ -92,7 +86,7 @@ void setup() {
 
 void loop() {
 
-  if (clickBotton(bot2) && skyLine[3] == 0) { //Опрашиваем кнопку2 на нажатие
+  if (but2.clickButton() && skyLine[3] == 0) { //Опрашиваем кнопку2 на нажатие
     jump = 1;          //Если кнопка нажата то активируем прыжок
   }
   if (but1.clickButton()) {                //Опрашиваем кнопку1 на нажатие
@@ -101,7 +95,7 @@ void loop() {
     lcd.print("  Pause  ");
   }
 
-  if (clickBotton(bot3) && gameOwer == 1) {//Опрашиваем кнопку 3 на нажатие
+  if (but3.clickButton() && gameOwer == 1) {//Опрашиваем кнопку 3 на нажатие
     gameOwer = 0;                         //Если кнопка нажата рестартим игру
     jump = 0;                             //Прыжок Дино бегуна
     setC = 1;                             //Флажок установки курсора вовторую строку
@@ -223,17 +217,5 @@ void loop() {
       score = ++score;
       timerRun = millis();
     }
-  }
-}
-
-bool clickBotton(Bot & botN) {
-  if (!digitalRead(botN.pin) && botN.itsClick == false && millis() - botN.timerBot > 250) {
-    botN.itsClick = true;
-    botN.timerBot = millis();
-    return true;
-  }
-  if (digitalRead(botN.pin) && botN.itsClick == true) {
-    botN.itsClick = false;
-    return false;
   }
 }
