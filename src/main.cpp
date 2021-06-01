@@ -19,6 +19,7 @@ bool jump = 0;                           //Прыжок Дино бегуна
 bool setC = 1;                           //Флажок установки курсора вовторую строку
 bool gameOwer = 0;
 bool pause = 0;
+bool menuExit = 0;                       //Переменная для отключения меню
 
 int score = 0;                           //Победные очки (кадр/сек)
 int flight = 0;                          //Счетчик кадров полета бегуна
@@ -88,26 +89,50 @@ void setup() {
 }
 
 void loop() {
-  
-  switch (menuSelect)
-  {
+
+  if (menuExit == 0 && millis() - timerRun > 500){ //Обнавляем меню раз в секунду и отключаем его во время игры
+  lcd.setCursor(0,1);
+  lcd.print("Button 2 - Select");
+  lcd.setCursor(0,0);
+  switch (menuSelect){                       //Выбераем пункт меню для отрисовки
   case 0:
-    
-    if (millis() - timerRun > 1000){
-      lcd.setCursor(0,0);
-      lcd.print("  >Start game<  ");
-      lcd.setCursor(0,1);
-      lcd.print("Press2 fot start");
-      if (but2.clickButton())
-      {
+      lcd.print("  Start game>>B3");        
+      if (but2.clickButton()){              //По кнопке 2 стартуем игру и отключаем меню
+        menuExit = 1;
+      }
+      if (but3.clickButton()){              //По кнопке 3 переходи по меню
         menuSelect = 1;
       }
-    }   
+      timerRun = millis();  
     break;
   
-  default:
-      game();
+  case 1:
+      lcd.print("B1<<Settings    ");
+      if (but2.clickButton()){              //По кнопке 2 заходим в настройки
+        menuSelect = 2;
+      }
+      if (but1.clickButton()){              //По кнопке 1 переходи по меню
+        menuSelect = 0;
+      }
+      timerRun = millis();
     break;
+  case 2:
+      lcd.print("Speed run: ");
+      lcd.print(speedRun);
+      if (but2.clickButton()){              //По кнопке 2 выходим из настроек
+        menuSelect = 0;
+      }
+      if (but1.clickButton() && speedRun < 900){//По кнопке 1 уменьшаем скорость бегуна 
+        speedRun += 50;
+      }
+      if (but3.clickButton() && speedRun > 300){//По кнопке 3 увеличиваем скорость бегуна 
+        speedRun -= 50;
+      }
+    break;
+  }
+  }
+  if (menuExit == 1){                       //Если игра запущена
+    game();
   }
 }
 
@@ -125,9 +150,9 @@ void game (){
     gameOwer = 0;                         //Если кнопка нажата рестартим игру
     jump = 0;                             //Прыжок Дино бегуна
     setC = 1;                             //Флажок установки курсора вовторую строку
-    gameOwer = 0;
     score = 0;                            //Победные очки (кадр/сек)
     flight = 0;                           //Счетчик кадров полета бегуна
+    menuExit = 0;
 
     for (int s = 0; s != 16; s++) {       //Обнавляем игровое поле
       if (s != 15) {                      // в 15 ячейке будет появляться новая часть земли
