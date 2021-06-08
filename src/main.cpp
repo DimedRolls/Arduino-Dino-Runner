@@ -3,34 +3,22 @@
 #include <LiquidCrystal.h>
 #include <Button.cpp>
 
-struct Bot {                             //Структура для кнопок с таймером и пином
-  int pin;                               //Пин на который подключена кнопка
-  long int timerBot = 0;                 //Ловим момент сробатывания кнопки для корректной работы таймера антидребезга
-  bool itsClick = 0;                     //Ловим нажатие кнопки
-};
-
 Button but1 (13);                                //Непосредственно сами кнопки
 Button but2 (12);
 Button but3 (10);
 
+void menu();                             //Прототип функции меню
 void game();                             //Прототип функции игры
 
-bool jump = 0;                           //Прыжок Дино бегуна
-bool setC = 1;                           //Флажок установки курсора вовторую строку
-bool gameOwer = 0;
-bool pause = 0;
 bool menuExit = 0;                       //Переменная для отключения меню
 
-int score = 0;                           //Победные очки (кадр/сек)
-int flight = 0;                          //Счетчик кадров полета бегуна
-int stepPlyer = 0;                       //Счетчик шагов для анимации бега
 int skyLine[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //Отрисовка неба 8 элементов, чтобы оставить место под очки
 int runLine[] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0}; //Условная отрисовка земли
 int saveChar = 0;                         //Здесь хранится часть поля перед дино, корректной отрисовки поля за ним при прохождении поля
-int speedRun = 750;                       //Скорость обновления экрана и игры
-int menuSelect = 0;                       //Переменная для перемещения по меню
+uint16_t speedRun = 750;                       //Скорость обновления экрана и игры
 
-long int timerRun = 0;                   //Таймер перерисовки монитора
+
+uint32_t timerRun = 0;                   //Таймер перерисовки монитора
 
 byte playerAvatar1[8] = {                //Первый кадр бегуна
   0b00011,  0b00011,  0b10010,  0b01110,  0b00110,  0b01001,  0b11111,  0b00000
@@ -89,82 +77,93 @@ void setup() {
 }
 
 void loop() {
-
-  if (menuExit == 0 && millis() - timerRun > 500){ //Обнавляем меню раз в секунду и отключаем его во время игры
-  lcd.setCursor(0,1);
-  lcd.print("Button 2 - Select");
-  lcd.setCursor(0,0);
-  switch (menuSelect){                       //Выбераем пункт меню для отрисовки
-  case 0:
-      lcd.print("  Start game>>B3");        
-      if (but2.clickButton()){              //По кнопке 2 стартуем игру и отключаем меню
-        menuExit = 1;
-      }
-      if (but3.clickButton()){              //По кнопке 3 переходи по меню
-        menuSelect = 1;
-      }
-      timerRun = millis();  
-    break;
-  
-  case 1:
-      lcd.print("B1<<Settings    ");
-      if (but2.clickButton()){              //По кнопке 2 заходим в настройки
-        menuSelect = 2;
-      }
-      if (but1.clickButton()){              //По кнопке 1 переходи по меню
-        menuSelect = 0;
-      }
-      timerRun = millis();
-    break;
-  case 2:
-      lcd.print("Speed run: ");
-      lcd.print(speedRun);
-      if (but2.clickButton()){              //По кнопке 2 выходим из настроек
-        menuSelect = 0;
-      }
-      if (but1.clickButton() && speedRun < 900){//По кнопке 1 уменьшаем скорость бегуна 
-        speedRun += 50;
-      }
-      if (but3.clickButton() && speedRun > 300){//По кнопке 3 увеличиваем скорость бегуна 
-        speedRun -= 50;
-      }
-    break;
-  }
-  }
-  if (menuExit == 1){                       //Если игра запущена
+  if (menuExit == 0){  
+    menu();
+    }else{                     //Если игра запущена
     game();
   }
 }
 
-void game (){
-  if (but2.clickButton() && skyLine[3] == 0) { //Опрашиваем кнопку2 на нажатие
-    jump = 1;          //Если кнопка нажата то активируем прыжок
+void menu (){
+
+static uint8_t menuSelect = 0;
+
+if (but2.clickButton()){              //По кнопке 2 выходим из настроек
+  switch (menuSelect)
+  {
+  case 0:
+    menuExit = 1;
+    break;
+
+  case 1:
+    menuSelect = 2;
+    break;
+  
+  default:
+    menuSelect = 0;
+    break;
   }
-  if (but1.clickButton()) {                //Опрашиваем кнопку1 на нажатие
+} 
+
+if (but1.clickButton()){
+  if (menuSelect != 0 && menuSelect != 2){
+    menuSelect = --menuSelect;
+  }else if (speedRun < 900){//По кнопке 1 уменьшаем скорость бегуна 
+    speedRun += 50;
+  }
+}
+if (but3.clickButton()){
+if (menuSelect != 1 && menuSelect != 2){
+    menuSelect = ++menuSelect;
+  }else if (speedRun > 300){//По кнопке 3 увеличиваем скорость бегуна 
+        speedRun -= 50;
+  }
+}
+
+if (millis() - timerRun > 500){ //Обнавляем меню раз в секунду и отключаем его во время игры
+
+  lcd.setCursor(0,1);
+  lcd.print("Button 2 - Select");
+  lcd.setCursor(0,0);
+  
+  switch (menuSelect){                       //Выбераем пункт меню для отрисовки
+    case 0:
+      lcd.print("  Start game>>B3");          
+    break;
+  
+    case 1:
+      lcd.print("B1<<Settings    ");
+    break;
+
+    case 2:
+      lcd.print("Speed run: ");
+      lcd.print(speedRun);
+    break;
+    }
+  }
+}
+
+void game (){
+
+static bool jump = 0;                           //Прыжок Дино бегуна
+static bool setC = 1;                           //Флажок установки курсора вовторую строку
+static bool gameOwer = 0;
+static bool pause = 0;
+
+static uint16_t score = 0;                           //Победные очки (кадр/сек)
+static int flight = 0;                          //Счетчик кадров полета бегуна
+static int stepPlyer = 0;                       //Счетчик шагов для анимации бега
+
+  if (but1.clickButton() && gameOwer != 1) {   //Опрашиваем кнопку1 на нажатие пока активна игра
     pause = !pause;                       //Если кнопка нажата ставим игру на паузу
     lcd.setCursor(0,0);
     lcd.print("  Pause  ");
+  } 
+  if (but2.clickButton() && skyLine[3] == 0 && pause == 0) { //Опрашиваем кнопку2 на нажатие
+    jump = 1;          //Если кнопка нажата то активируем прыжок
   }
-
-  if (but3.clickButton() && gameOwer == 1) {//Опрашиваем кнопку 3 на нажатие
-    gameOwer = 0;                         //Если кнопка нажата рестартим игру
-    jump = 0;                             //Прыжок Дино бегуна
-    setC = 1;                             //Флажок установки курсора вовторую строку
-    score = 0;                            //Победные очки (кадр/сек)
-    flight = 0;                           //Счетчик кадров полета бегуна
-    menuExit = 0;
-
-    for (int s = 0; s != 16; s++) {       //Обнавляем игровое поле
-      if (s != 15) {                      // в 15 ячейке будет появляться новая часть земли
-           runLine[s] = 0;
-      } else {
-        runLine [s] = random(0, 3);       //выбераем случайное препятствие или пустую ячейку
-      }
-    }
-    lcd.setCursor(13,0);
-    lcd.print("   ");
-  }
-
+ 
+ 
   if (millis() - timerRun > speedRun) {       //Каждую секунду обнавляем игру(экран, положение дино и тд)
     if (gameOwer == 0 && pause == 0) {
 #ifdef DEBAG
@@ -222,7 +221,8 @@ void game (){
         }
       }
 
-      lcd.setCursor(0, 0);                         //Вывод поля
+      lcd.clear();
+      //lcd.setCursor(0, 0);                         //Вывод поля
 
       for (int f = 0; f != 26; f++) {
         if (f < 10) {
@@ -255,7 +255,8 @@ void game (){
       }
     } else if (gameOwer == 1){
       lcd.setCursor(0, 0);
-      lcd.print("Game Ower!");
+      lcd.print("Game Ower! Sc:");
+      lcd.print(score);
     }
     if (gameOwer == 0 && pause == 0) {
       lcd.setCursor(10, 0);
@@ -268,5 +269,23 @@ void game (){
       score = ++score;
       timerRun = millis();
     }
+  }
+   if (but3.clickButton() && gameOwer == 1) {//Опрашиваем кнопку 3 на нажатие
+    gameOwer = 0;                         //Если кнопка нажата рестартим игру
+    jump = 0;                             //Прыжок Дино бегуна
+    setC = 1;                             //Флажок установки курсора вовторую строку
+    score = 0;                            //Победные очки (кадр/сек)
+    flight = 0;                           //Счетчик кадров полета бегуна
+    menuExit = 0;
+
+    for (int s = 0; s != 16; s++) {       //Обнавляем игровое поле
+      if (s != 15) {                      // в 15 ячейке будет появляться новая часть земли
+           runLine[s] = 0;
+      } else {
+        runLine [s] = random(0, 3);       //выбераем случайное препятствие или пустую ячейку
+      }
+    }
+    lcd.setCursor(13,0);
+    lcd.print("   ");
   }
 }
