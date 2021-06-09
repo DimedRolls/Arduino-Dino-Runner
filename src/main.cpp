@@ -11,11 +11,12 @@ void menu();                             //Прототип функции ме�
 void game();                             //Прототип функции игры
 
 bool menuExit = 0;                       //Переменная для отключения меню
+bool autoSpeed = 1;                      //Переменая для определения изменеия скорости игры
 
 int skyLine[] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}; //Отрисовка неба 8 элементов, чтобы оставить место под очки
 int runLine[] = {0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 1, 1, 0}; //Условная отрисовка земли
 int saveChar = 0;                         //Здесь хранится часть поля перед дино, корректной отрисовки поля за ним при прохождении поля
-uint16_t speedRun = 750;                       //Скорость обновления экрана и игры
+uint16_t speedRun = 600;                       //Скорость обновления экрана и игры
 
 
 uint32_t timerRun = 0;                   //Таймер перерисовки монитора
@@ -91,31 +92,42 @@ static uint8_t menuSelect = 0;
 if (but2.clickButton()){              //По кнопке 2 выходим из настроек
   switch (menuSelect)
   {
-  case 0:
+    case 0:
     menuExit = 1;
     break;
 
-  case 1:
+    case 1:
     menuSelect = 2;
+    break;
+  
+    case 2:
+    menuSelect = 0;
+    speedRun = 600;
+    autoSpeed = 1;
+    break;
+
+    case 3:
+    menuSelect = 4;
     break;
   
   default:
     menuSelect = 0;
+    autoSpeed = 0;
     break;
   }
 } 
 
 if (but1.clickButton()){
-  if (menuSelect != 0 && menuSelect != 2){
-    menuSelect = --menuSelect;
-  }else if (speedRun < 900){//По кнопке 1 уменьшаем скорость бегуна 
+  if (menuSelect != 1 && menuSelect != 3 && menuSelect != 4){
+    menuSelect = ++menuSelect;
+  }else if (menuSelect == 4 && speedRun < 900){//По кнопке 1 увеличиваем скорость бегуна 
     speedRun += 50;
   }
 }
 if (but3.clickButton()){
-if (menuSelect != 1 && menuSelect != 2){
-    menuSelect = ++menuSelect;
-  }else if (speedRun > 300){//По кнопке 3 увеличиваем скорость бегуна 
+if (menuSelect != 0 && menuSelect != 2 && menuSelect != 4){
+    menuSelect = --menuSelect;
+  }else if (menuSelect == 4 && speedRun > 300){//По кнопке 3 уменьшаем скорость бегуна 
         speedRun -= 50;
   }
 }
@@ -128,17 +140,26 @@ if (millis() - timerRun > 500){ //Обнавляем меню раз в секу
   
   switch (menuSelect){                       //Выбераем пункт меню для отрисовки
     case 0:
-      lcd.print("  Start game>>B3");          
+      lcd.print("  Start game >> ");          
     break;
   
     case 1:
-      lcd.print("B1<<Settings    ");
+      lcd.print(" << Settings    ");
     break;
 
     case 2:
+      lcd.print("Speed run: Auto>");
+    break;
+    
+    case 3:
+      lcd.print("Speed run: Set <");
+    break;
+
+    case 4:
       lcd.print("Speed run: ");
       lcd.print(speedRun);
     break;
+    
     }
   }
 }
@@ -268,6 +289,12 @@ static int stepPlyer = 0;                       //Счетчик шагов дл
       lcd.print(score);
       score = ++score;
       timerRun = millis();
+
+      if (autoSpeed == 1 && (score%50 == 0) && speedRun > 300)
+      {
+        speedRun -= 100;
+      }
+      
     }
   }
    if (but3.clickButton() && gameOwer == 1) {//Опрашиваем кнопку 3 на нажатие
@@ -287,5 +314,9 @@ static int stepPlyer = 0;                       //Счетчик шагов дл
     }
     lcd.setCursor(13,0);
     lcd.print("   ");
+    if (autoSpeed == 1)
+      {
+        speedRun = 600;
+      }
   }
 }
